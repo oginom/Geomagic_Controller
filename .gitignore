@@ -1,0 +1,7 @@
+/.vs/*
+/Debug/*
+/Win32/*
+/Geomagic_Controller.sln
+/Geomagic_Controller.vcxproj.user
+/msvcp120d.dll
+/msvcr120d.dll
