@@ -32,6 +32,7 @@ int dstSocket;
 
 
 static HDdouble gMaxAddForce = 0.01; // N
+static HDdouble K1 = 0.05; // N/mm
 static hduVector3Dd gPosition = { 0, 0, 0 }; // mm
 static HDdouble gTransform[16];
 
@@ -46,6 +47,7 @@ HDCallbackCode HDCALLBACK AddForceCallback(void *pUserData);
 HDCallbackCode HDCALLBACK SetTargetPosCallback(void *pUserData);
 HDCallbackCode HDCALLBACK GetDevicePosCallback(void *pUserData);
 HDCallbackCode HDCALLBACK GetTransformCallback(void *pUserData);
+HDCallbackCode HDCALLBACK SetK1Callback(void *pUserData);
 HDCallbackCode HDCALLBACK GetButtonsCallback(void *pUserData);
 
 BOOL initDemo();
@@ -118,8 +120,6 @@ int main(int argc, char* argv[])
 //#
 HDCallbackCode HDCALLBACK AddForceCallback(void *pUserData)
 {
-	static const HDdouble K1 = 0.05;
-
 	HDErrorInfo error;
 	//HDdouble instRate;
 	//static HDdouble timer = 0;
@@ -196,6 +196,18 @@ HDCallbackCode HDCALLBACK GetTransformCallback(void *pUserData)
 	for (int i = 0; i < 16; ++i) {
 		pTransform[i] = gTransform[i];
 	}
+	return HD_CALLBACK_DONE;
+}
+
+//#
+//# Modifies the spring constant
+//#
+HDCallbackCode HDCALLBACK SetK1Callback(void *pUserData)
+{
+	HDdouble *pTarget = (HDdouble *)pUserData;
+
+	K1 = *pTarget;
+
 	return HD_CALLBACK_DONE;
 }
 
@@ -425,7 +437,19 @@ int socketLoop()
 				// TODO
 				break;
 			case 'k': // set spring constant
-				// TODO
+				scann = sscanf(buf, "k %lf", &x0);
+				assert(scann == 1);
+				if (x0 < 0)
+				{
+					strcpy(msg, "NG");
+				}
+				else
+				{
+					printf("new K1: %lf\n", x0);
+					hdScheduleSynchronous(SetK1Callback, &x0,
+						HD_DEFAULT_SCHEDULER_PRIORITY);
+					strcpy(msg, "OK");
+				}
 				break;
 			case 'v': // set vibration
 				// TODO
