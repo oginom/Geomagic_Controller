@@ -1,9 +1,8 @@
 /*****************************************************************************
 
 Name:	Geomagic_Controller.c
-Date:	11/Sep/2018
-Author:	Masahiro Ogino (GitHub: @oginom)
-Contact:	ogino@star.rcast.u-tokyo.ac.jp
+Date:	Sep/11/2018
+Author:	Masahiro Ogino
 Detail:	https://github.com/oginom/Geomagic_Controller
 
 *******************************************************************************/
@@ -331,7 +330,8 @@ int socketLoop()
 
 	struct sockaddr_in client;
 	char buf[1024];
-	int scann, x0, x1, x2;
+	int scann;
+	double x0, x1, x2;
 	hduVector3Dd pos0;
 	char msg[40];
 	int n;
@@ -357,7 +357,7 @@ int socketLoop()
 			switch (buf[0])
 			{
 			case 't': // set target position
-				scann = sscanf(buf, "t %d,%d,%d", &x0, &x1, &x2);
+				scann = sscanf(buf, "t %lf,%lf,%lf", &x0, &x1, &x2);
 				assert(scann == 3);
 				pos0[0] = x0;
 				pos0[1] = x1;
