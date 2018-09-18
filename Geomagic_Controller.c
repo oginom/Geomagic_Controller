@@ -33,6 +33,8 @@ int dstSocket;
 
 static HDdouble gMaxAddForce = 0.01; // N
 static hduVector3Dd gPosition = { 0, 0, 0 }; // mm
+static HDdouble gTransform[16];
+
 static HDint gButtons = 0;
 
 static hduVector3Dd gTarget = { 0, 0, 0 }; // mm
@@ -43,6 +45,7 @@ HDCallbackCode HDCALLBACK AddForceCallback(void *pUserData);
 
 HDCallbackCode HDCALLBACK SetTargetPosCallback(void *pUserData);
 HDCallbackCode HDCALLBACK GetDevicePosCallback(void *pUserData);
+HDCallbackCode HDCALLBACK GetTransformCallback(void *pUserData);
 HDCallbackCode HDCALLBACK GetButtonsCallback(void *pUserData);
 
 BOOL initDemo();
@@ -124,6 +127,7 @@ HDCallbackCode HDCALLBACK AddForceCallback(void *pUserData)
 	hdBeginFrame(hdGetCurrentDevice());
 
 	hdGetDoublev(HD_CURRENT_POSITION, gPosition);
+	hdGetDoublev(HD_CURRENT_TRANSFORM, gTransform);
 	hdGetIntegerv(HD_CURRENT_BUTTONS, &gButtons);
 
 	// Use the reciprocal of the instantaneous rate as a timer.
@@ -180,6 +184,18 @@ HDCallbackCode HDCALLBACK GetDevicePosCallback(void *pUserData)
 	pPosition[1] = gPosition[1];
 	pPosition[2] = gPosition[2];
 
+	return HD_CALLBACK_DONE;
+}
+
+//#
+//# Gets current device transform matrix
+//#
+HDCallbackCode HDCALLBACK GetTransformCallback(void *pUserData)
+{
+	HDdouble *pTransform = (HDdouble *)pUserData;
+	for (int i = 0; i < 16; ++i) {
+		pTransform[i] = gTransform[i];
+	}
 	return HD_CALLBACK_DONE;
 }
 
@@ -347,6 +363,7 @@ int socketLoop()
 	int scann;
 	double x0, x1, x2;
 	hduVector3Dd pos0;
+	HDdouble trans0[16];
 	int b0;
 	char msg[40];
 	int n;
@@ -363,7 +380,7 @@ int socketLoop()
 
 		while (HD_TRUE)
 		{
-			// 送られてきたメッセージ(COMMAND)を受け取ります
+			// receive command
 			memset(buf, 0, 1024);
 			recv(sockw, buf, 1024, 0);
 			if (buf[0] == '\0')   strcpy(buf, "NULL");
@@ -394,7 +411,20 @@ int socketLoop()
 					HD_DEFAULT_SCHEDULER_PRIORITY);
 				sprintf(msg, "%.3f,%.3f,%.3f", pos0[0], pos0[1], pos0[2]);
 				break;
+			case 'm': // get transform matrix
+				hdScheduleSynchronous(GetTransformCallback, trans0,
+					HD_DEFAULT_SCHEDULER_PRIORITY);
+				sprintf(msg, "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f",
+					trans0[0], trans0[1], trans0[2], trans0[3],
+					trans0[4], trans0[5], trans0[6], trans0[7], 
+					trans0[8], trans0[9], trans0[10], trans0[11], 
+					trans0[12], trans0[13], trans0[14], trans0[15]
+				);
+				break;
 			case 'w': // set weight
+				// TODO
+				break;
+			case 'k': // set spring constant
 				// TODO
 				break;
 			case 'v': // set vibration
