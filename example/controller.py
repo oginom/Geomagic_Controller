@@ -41,13 +41,19 @@ class GeomagicManager:
   def GetPosition(self):
     self.Send('p')
     r = self.Receive()
-    return r.split(',')
+    return [float(x) for x in r.split(',')]
 
   def SetTarget(self, target):
     self.Send('t %d,%d,%d' % (target[0], target[1], target[2]))
     r = self.Receive()
     if r != 'ok':
       print(r)
+
+  def GetButtons(self):
+    self.Send('b')
+    r = self.Receive()
+    n = int(r)
+    return (n & 1, n >> 1 & 1)
 
 if __name__ == '__main__':
   with GeomagicManager() as gm:

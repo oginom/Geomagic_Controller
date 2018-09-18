@@ -33,6 +33,8 @@ int dstSocket;
 
 static HDdouble gMaxAddForce = 0.01; // N
 static hduVector3Dd gPosition = { 0, 0, 0 }; // mm
+static HDint gButtons = 0;
+
 static hduVector3Dd gTarget = { 0, 0, 0 }; // mm
 
 HDSchedulerCallback gCallbackHandle = 0;
@@ -41,6 +43,7 @@ HDCallbackCode HDCALLBACK AddForceCallback(void *pUserData);
 
 HDCallbackCode HDCALLBACK SetTargetPosCallback(void *pUserData);
 HDCallbackCode HDCALLBACK GetDevicePosCallback(void *pUserData);
+HDCallbackCode HDCALLBACK GetButtonsCallback(void *pUserData);
 
 BOOL initDemo();
 
@@ -121,6 +124,7 @@ HDCallbackCode HDCALLBACK AddForceCallback(void *pUserData)
 	hdBeginFrame(hdGetCurrentDevice());
 
 	hdGetDoublev(HD_CURRENT_POSITION, gPosition);
+	hdGetIntegerv(HD_CURRENT_BUTTONS, &gButtons);
 
 	// Use the reciprocal of the instantaneous rate as a timer.
 	//hdGetDoublev(HD_INSTANTANEOUS_UPDATE_RATE, &instRate);
@@ -176,6 +180,16 @@ HDCallbackCode HDCALLBACK GetDevicePosCallback(void *pUserData)
 	pPosition[1] = gPosition[1];
 	pPosition[2] = gPosition[2];
 
+	return HD_CALLBACK_DONE;
+}
+
+//#
+//# Gets current buttons states
+//#
+HDCallbackCode HDCALLBACK GetButtonsCallback(void *pUserData)
+{
+	HDint *pButtons = (HDdouble *)pUserData;
+	*pButtons = gButtons;
 	return HD_CALLBACK_DONE;
 }
 
@@ -333,6 +347,7 @@ int socketLoop()
 	int scann;
 	double x0, x1, x2;
 	hduVector3Dd pos0;
+	int b0;
 	char msg[40];
 	int n;
 	while (HD_TRUE)
@@ -381,6 +396,14 @@ int socketLoop()
 				break;
 			case 'w': // set weight
 				// TODO
+				break;
+			case 'v': // set vibration
+				// TODO
+				break;
+			case 'b': // get buttons state
+				hdScheduleSynchronous(GetButtonsCallback, &b0,
+					HD_DEFAULT_SCHEDULER_PRIORITY);
+				sprintf(msg, "%d", b0);
 				break;
 			default:
 				strcpy(msg, "ERROR");
